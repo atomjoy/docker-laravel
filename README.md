@@ -40,7 +40,7 @@ DB_PASSWORD=
 docker compose build --no-cache && docker compose up --force-recreate -d
 ```
 
-### Examples
+## Commands
 
 ```sh
 # Up
@@ -89,6 +89,28 @@ host.docker.internal
 docker network create --driver bridge --subnet 182.18.0.0/16 custom-network-name
 docker network ls
 docker inspect custom-network-name
+```
+
+## Phpmyadmin
+
+```sh
+# Service phpmyadmin
+phpma:
+  container_name: phpma
+  depends_on:
+    - mysql
+  image: phpmyadmin/phpmyadmin
+  restart: always
+  networks:
+    - thenetwork
+  ports:
+    - "8001:80"
+  environment:
+    MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+    PMA_HOST: ${DB_HOST} # host.docker.internal
+    PMA_PORT: ${DB_PORT} # 3307
+    # Select server
+    # PMA_ARBITRARY: 1
 ```
 
 ## Laravel .env
