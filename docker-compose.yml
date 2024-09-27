@@ -1,0 +1,79 @@
+services:
+
+  # Nginx
+  web:     
+    restart: always
+    container_name: web_host
+    ports:      
+      - 8000:80
+    working_dir: /var/www/html
+    build:
+      context: .
+      target: nginx_server_stage
+      dockerfile: ./Dockerfile
+    volumes:
+      #- ./html:/var/www/html
+      - ./laravel-app:/var/www/html
+      - ./docker/entrypoint.sh:/var/www/docker/entrypoint.sh
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - thenetwork
+    depends_on: 
+      - mysql     
+      - php
+
+  # Php-fpm
+  php:
+    tty: true
+    restart: always
+    container_name: php_host
+    ports:
+      - 9000:9000      
+    working_dir: /var/www/html
+    build:
+      context: .
+      target: php_server_stage
+      dockerfile: ./Dockerfile
+    volumes:
+      # - ./html:/var/www/html
+      - ./laravel-app:/var/www/html
+    networks:
+      - thenetwork
+    depends_on:
+      - mysql
+
+  # Database service
+  mysql:
+    tty: true
+    container_name: mysql_host
+    image: mysql:8.0
+    ports:
+      - 3307:3306
+    restart: always # unless-stopped
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=${DB_ALLOW_EMPTY_PASSWORD}
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      #- MYSQL_USER=${DB_USERNAME}
+      #- MYSQL_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - ./mysql:/docker-entrypoint-initdb.d/
+      # - db-data:/var/lib/mysql
+    networks:
+      - thenetwork
+
+#Docker netwtorks
+networks:
+  thenetwork:
+    driver: bridge
+
+# Docker volumes
+volumes:
+  db-data: 
+    driver: local
+    driver_opts:
+      device: ./db/data/mysql
+      type: none
+      o: bind
+  # Or
+  # db-data: ~
